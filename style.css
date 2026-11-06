@@ -2,3 +2,5 @@
 @media(max-width:760px){.shell{max-width:510px;padding:calc(17px + env(safe-area-inset-top)) 18px calc(16px + env(safe-area-inset-bottom))}header{padding-bottom:18px;border:0}.brand{font-size:24px;gap:10px}.brand-mark{width:43px;height:43px;font-size:29px;border-radius:10px}.brand small{font-size:10px;margin-top:5px;letter-spacing:1px}.workspace{display:block;padding-top:7px}.toolbar{margin-bottom:14px}.side-panel{display:none}.board-caption{margin-bottom:10px}.actions{margin-top:14px;gap:8px}.outline{padding:8px 12px}.number-key{min-height:48px;font-size:26px}.keypad{gap:4px;margin-top:11px}.hint{margin-top:12px;font-size:11px}footer{margin-top:12px;padding-top:12px;gap:10px}.version{font-size:10px}.notice:empty{display:none}}
 @media(max-width:360px){.shell{padding-left:12px;padding-right:12px}.actions span{margin-right:0}.number-key{font-size:24px}.candidate{font-size:3.3cqw}footer{gap:3px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.checkpoint-controls{display:flex;align-items:center;gap:12px;margin-top:10px}.checkpoint-controls button{font-size:13px;flex-shrink:0}.checkpoint-controls span{font-size:11px;color:var(--muted)}

@@ -14,6 +14,9 @@ export function edit(g,i,n,note=false){
  else{g.values[i]=n;g.notes[i]=0;if(n)for(const j of peers[i])g.notes[j]&=~(1<<n);}
  return true;
 }
+export function canCheckpoint(g){return g.level===3||g.level===4;}
+export function setCheckpoint(g){if(!canCheckpoint(g)||g.checkpoint||complete(g))return false;g.checkpoint={values:[...g.values],notes:[...g.notes]};return true;}
+export function restoreCheckpoint(g){if(!canCheckpoint(g)||!g.checkpoint)return false;g.history.push({values:[...g.values],notes:[...g.notes]});if(g.history.length>300)g.history.shift();g.values=[...g.checkpoint.values];g.notes=[...g.checkpoint.notes];return true;}
 export function undo(g){const s=g.history.pop();if(!s)return false;g.values=s.values;g.notes=s.notes;return true;}
 export function influence(g,selected,enhanced){if(selected<0||selected>80)return new Set();const n=g.values[selected];const sources=enhanced&&n?g.values.flatMap((v,i)=>v===n?[i]:[]):[selected];return new Set(sources.flatMap(i=>[i,...peers[i]]));}
 export function validateSave(data){
@@ -22,7 +25,8 @@ export function validateSave(data){
  if(!array(data.givens,9)||data.givens.filter(Boolean).length<17||conflicts({values:data.givens}).size)throw Error('题目数据不正确');
  const validState=s=>s&&array(s.values,9)&&array(s.notes,1022)&&s.notes.every((n,i)=>(n&1)===0&&(!s.values[i]||n===0))&&data.givens.every((n,i)=>!n||s.values[i]===n);
  if(!validState(data)||!Array.isArray(data.history)||data.history.length>300||!data.history.every(validState))throw Error('游戏进度数据不正确');
- return {version:1,level:data.level,givens:[...data.givens],values:[...data.values],notes:[...data.notes],history:data.history.map(s=>({values:[...s.values],notes:[...s.notes]}))};
+ if(data.checkpoint!==undefined&&(!canCheckpoint(data)||!validState(data.checkpoint)))throw Error('检查点数据不正确');
+ return {...(data.checkpoint===undefined?{}:{checkpoint:{values:[...data.checkpoint.values],notes:[...data.checkpoint.notes]}}),version:1,level:data.level,givens:[...data.givens],values:[...data.values],notes:[...data.notes],history:data.history.map(s=>({values:[...s.values],notes:[...s.notes]}))};
 }
 // Stable 64-bit identifier, with collisions checked for every bundled puzzle.
 export function puzzleId(puzzle){let a=2166136261,b=2246822507;for(let i=0;i<puzzle.length;i++){const c=puzzle.charCodeAt(i);a=Math.imul(a^c,16777619);b=Math.imul(b^c,3266489909);}return (a>>>0).toString(16).padStart(8,'0')+(b>>>0).toString(16).padStart(8,'0');}

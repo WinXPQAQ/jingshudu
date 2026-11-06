@@ -1,8 +1,9 @@
-import {LEVELS,createGame,conflicts,finishedDigits,complete,edit,undo,influence,validateSave,choosePuzzle,puzzleId,validateSeen} from './core.mjs';
+import {LEVELS,createGame,conflicts,finishedDigits,complete,edit,undo,influence,validateSave,choosePuzzle,puzzleId,validateSeen,canCheckpoint,setCheckpoint,restoreCheckpoint} from './core.mjs';
 const $=id=>document.getElementById(id),SAVE='jingsudoku-web-v1',PREF='jingsudoku-web-preferences',HISTORY='jingsudoku-web-seen-v1';
 let seen=new Set(),pendingSeen=null,historyBlocked=false;
 let game,corpus,selected=-1,noteMode=false,enhanced=false,pendingImport=null,saveFailed=false;
 const cells=[],keys=[];
+let checkpointGame=null;
 function notice(s){$('notice').textContent=s;}
 function rememberGame(){if(!game)return;seen.add(puzzleId(game.givens.join('')));if(historyBlocked)return;try{localStorage.setItem(HISTORY,JSON.stringify([...seen]));}catch{notice('已玩题目记录无法保存，关闭后可能重复，请导出备份。');}}
 function persist(){try{localStorage.setItem(SAVE,JSON.stringify(game));saveFailed=false;$('save-status').textContent='进度已保存在这台设备';}catch{saveFailed=true;$('save-status').textContent='无法自动保存，请导出备份';notice('浏览器无法保存进度，请在「存档与备份」中导出。');}}
@@ -19,6 +20,7 @@ function render(){
   else{cell.replaceChildren();const grid=document.createElement('span');grid.className='candidate-grid';grid.setAttribute('aria-hidden','true');for(let d=1;d<=9;d++){const c=document.createElement('span');c.className='candidate'+(d===n?' emphasis':'');c.textContent=notes.includes(d)?d:'';grid.append(c);}cell.append(grid);}
  });
  keys.forEach((key,i)=>{key.classList.toggle('finished',finished.includes(i+1));key.disabled=done;key.setAttribute('aria-hidden',String(finished.includes(i+1)));key.tabIndex=finished.includes(i+1)?-1:0;});
+ $('checkpoint-controls').hidden=!canCheckpoint(game);$('set-checkpoint').hidden=!!game.checkpoint;$('set-checkpoint').disabled=done;$('restore-checkpoint').hidden=!game.checkpoint;
  $('undo').disabled=!game.history.length;$('erase').disabled=selected<0||!!game.givens[selected]||done||(!game.values[selected]&&!game.notes[selected]);$('notes').disabled=done;
  $('notes').setAttribute('aria-pressed',String(noteMode));$('enhance').setAttribute('aria-pressed',String(enhanced));
  $('level').textContent=done?'完成了，漂亮！':`当前 · ${LEVELS[game.level]}`;
@@ -39,6 +41,13 @@ for(let i=0;i<81;i++){
 }
 for(let n=1;n<=9;n++){const key=document.createElement('button');key.className='number-key';key.textContent=n;key.setAttribute('aria-label',`输入 ${n}`);key.onclick=()=>enter(n);$('keypad').append(key);keys.push(key);}
 LEVELS.forEach((label,d)=>{const b=document.createElement('button');b.className='difficulty-option';b.dataset.level=d;const text=document.createElement('span');text.textContent=label;const dots=document.createElement('small');dots.textContent='●'.repeat(d+1)+'○'.repeat(4-d);dots.setAttribute('aria-hidden','true');b.append(text,dots);b.onclick=()=>{try{for(const id of validateSeen(JSON.parse(localStorage.getItem(HISTORY)||'[]')))seen.add(id);}catch{historyBlocked=true;}if(!corpus){notice('题库尚未加载，请联网后重试。');return;}if(historyBlocked){notice('已玩记录无法读取，请先导出备份或恢复有效记录，避免重复选题。');return;}const next=choosePuzzle(corpus,d,game?.givens.join(''),seen);if(!next){$('difficulty-dialog').close();notice('这个难度的题已全部玩过，试试其他难度吧。');return;}game=createGame(next,d);selected=-1;noteMode=false;notice('');persist();rememberGame();render();$('difficulty-dialog').close();};$('difficulty-options').append(b);});
+$('set-checkpoint').onclick=()=>{if(!game||!canCheckpoint(game)||game.checkpoint||complete(game))return;checkpointGame=game;open('checkpoint-dialog');};
+$('confirm-checkpoint').onclick=()=>{
+ if(checkpointGame!==game){$('checkpoint-dialog').close();notice('当前游戏已变化，请重新建立检查点。');return;}
+ if(setCheckpoint(game)){notice('检查点已建立，本局不能再更改。');persist();render();}
+ checkpointGame=null;$('checkpoint-dialog').close();
+};
+$('restore-checkpoint').onclick=()=>{if(game&&restoreCheckpoint(game)){notice('已回到检查点，数字和备注已恢复。');persist();render();}};
 $('new-game').onclick=()=>open('difficulty-dialog');$('undo').onclick=undoMove;$('erase').onclick=()=>enter(0);
 $('notes').onclick=()=>{noteMode=!noteMode;render();};
 $('enhance').onclick=()=>{enhanced=!enhanced;try{localStorage.setItem(PREF,JSON.stringify({enhanced}));}catch{notice('此浏览器无法记住辅助增强设置。');}render();};
