@@ -14,7 +14,7 @@
 <section class="game-panel" aria-label="数独游戏">
 <div class="toolbar"><button id="new-game" class="outline">＋ 新游戏</button><button id="enhance" class="toggle" aria-pressed="false"><span class="switch" aria-hidden="true"></span>辅助增强</button></div>
 <div class="board-caption"><span id="level">当前 · 难</span><span id="progress">0 <span>/ 81</span></span></div>
-<div class="board" id="board" role="group" aria-label="数独棋盘"></div>
+<div class="board-frame"><div class="board" id="board" role="group" aria-label="数独棋盘"></div></div>
 <div class="actions"><button id="undo" class="outline"><span aria-hidden="true">↶</span> 撤销</button><button id="erase" class="outline"><span aria-hidden="true">⌫</span> 擦除</button><button id="notes" class="outline" aria-pressed="false"><span aria-hidden="true">✎</span> 笔记</button></div>
 <div id="checkpoint-controls" class="checkpoint-controls" hidden><button id="set-checkpoint" class="outline">建立检查点</button><button id="restore-checkpoint" class="outline" hidden>回到检查点</button><span>每局仅设一次 · 可反复返回</span></div>
 <div class="keypad" id="keypad" aria-label="输入数字"></div>
