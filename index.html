@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5ee"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="静数独：无广告的离线数独。五档难度、候选数笔记、辅助增强与自动保存。">
+<title>静数独 · 留一点时间，给思考</title>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main class="shell">
+<header><a class="brand" href="./" aria-label="静数独首页"><span class="brand-mark" aria-hidden="true">井</span><span>静数独<small>给思考，留一点时间。</small></span></a><button id="help" class="round" aria-label="使用说明">?</button></header>
+<div class="workspace">
+<section class="game-panel" aria-label="数独游戏">
+<div class="toolbar"><button id="new-game" class="outline">＋ 新游戏</button><button id="enhance" class="toggle" aria-pressed="false"><span class="switch" aria-hidden="true"></span>辅助增强</button></div>
+<div class="board-caption"><span id="level">当前 · 难</span><span id="progress">0 <span>/ 81</span></span></div>
+<div class="board" id="board" role="group" aria-label="数独棋盘"></div>
+<div class="actions"><button id="undo" class="outline"><span aria-hidden="true">↶</span> 撤销</button><button id="erase" class="outline"><span aria-hidden="true">⌫</span> 擦除</button><button id="notes" class="outline" aria-pressed="false"><span aria-hidden="true">✎</span> 笔记</button></div>
+<div class="keypad" id="keypad" aria-label="输入数字"></div>
+<p id="hint" class="hint">选择一个空格，开始你的思考。</p>
+<p id="notice" class="notice" role="status" aria-live="polite"></p>
+</section>
+<aside class="side-panel"><div class="eyebrow">一格一格，慢慢来</div><h1>把这一刻，<br>留给自己。</h1><p class="intro">没有广告，没有倒计时。<br>只有你，和九宫格里的小小秩序。</p><div class="side-rule"></div><div class="detail"><span class="detail-icon">◎</span><div><strong>每一步，都会记住</strong><p id="save-status">进度自动保存在这台设备</p></div></div><div class="detail"><span class="detail-icon">↗</span><div><strong>随时打开，接着思考</strong><p>缓存完成后，断网也能继续游玩</p></div></div><button id="install-info" class="text-link">添加到主屏幕 <span aria-hidden="true">↗</span></button></aside>
+</div>
+<footer><span><i></i> 无广告 · 本地存档</span><button id="backup">存档与备份</button><span class="version" id="offline-status">正在准备离线使用…</span></footer>
+</main>
+<dialog id="difficulty-dialog" aria-labelledby="difficulty-title"><div class="dialog-heading"><h2 id="difficulty-title">开始新的一局</h2><button class="close" data-close aria-label="关闭">×</button></div><p>选择难度即可开局，当前进度将被替换。</p><div id="difficulty-options" class="difficulty-options"></div><button class="cancel" data-close>先继续这一局</button></dialog>
+<dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">一点小帮助</h2><button class="close" data-close aria-label="关闭">×</button></div><div class="help-content"><h3>从一个空格开始</h3><p>点选格子，再点下方数字。每行、每列、每个九宫内，1–9 各出现一次。红色表示重复冲突。</p><h3>让思路留在棋盘上</h3><p>开启「笔记」记录候选数。点击已填数字，只强调相同数字的笔记。「辅助增强」会显示棋盘上所有同数字的行、列、宫范围。</p><h3>像 App 一样打开</h3><p>iPhone：在 Safari 中打开，点分享按钮 →「添加到主屏幕」。等待显示“已可离线使用”后，即可断网游玩。安卓可使用浏览器的“安装应用”或“添加到主屏幕”。</p><h3>安心保留进度</h3><p>进度保存在当前浏览器，不会自动同步。清除网站数据可能丢失存档，请在「存档与备份」中导出。添加到主屏幕后若未带入进度，可导入备份。</p><p class="muted">内置 500 道已验证题目，五档各 100 道。难度沿用安卓版评级。本版从题库随机选题，暂不实时生成。电脑也可用数字键、方向键、N（笔记）、删除键和 Ctrl/⌘ Z（撤销）。</p></div><button class="primary" data-close>知道了，开始思考</button></dialog>
+<dialog id="backup-dialog" aria-labelledby="backup-title"><div class="dialog-heading"><h2 id="backup-title">存档与备份</h2><button class="close" data-close aria-label="关闭">×</button></div><p>备份包含当前棋盘、笔记和最近 300 步撤销记录。仅支持本网页版存档。</p><button id="export" class="primary">导出当前存档</button><label class="file-button" for="import">选择存档文件</label><input type="file" id="import" accept=".json,application/json" hidden><p id="import-status" role="status" class="muted"></p><button id="confirm-import" class="primary" hidden>用此存档替换当前进度</button><button class="cancel" data-close>返回游戏</button></dialog>
+<noscript><p>请启用 JavaScript 后使用静数独。</p></noscript>
+<script type="module" src="./app.mjs"></script>
+</body></html>

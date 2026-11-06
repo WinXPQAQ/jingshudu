@@ -1,0 +1,1 @@
+{"id":"./","name":"静数独","short_name":"静数独","description":"给思考，留一点时间。无广告的离线数独。","lang":"zh-CN","start_url":"./","scope":"./","display":"standalone","background_color":"#f5f5ee","theme_color":"#f5f5ee","icons":[{"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
