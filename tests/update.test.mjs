@@ -1,0 +1,7 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {upgrade} from '../update.mjs';
+class Worker extends EventTarget{constructor(state){super();this.state=state;this.messages=[];}postMessage(message){this.messages.push(message);this.state='activated';this.dispatchEvent(new Event('statechange'));}}
+test('waiting worker activates even with old tabs, without touching saved games',async()=>{const worker=new Worker('installed');let updated=false;await upgrade({register:async(path,options)=>{assert.equal(path,'./sw.js');assert.equal(options.updateViaCache,'none');return {waiting:worker,update:async()=>updated=true};}});assert(updated);assert.deepEqual(worker.messages,[{type:'ACTIVATE_UPDATE'}]);});
+test('installing worker waits for full install before activation',async()=>{const worker=new Worker('installing');const result=upgrade({register:async()=>({installing:worker,update:async()=>{}})});await new Promise(r=>setTimeout(r,0));assert.equal(worker.messages.length,0);worker.state='installed';worker.dispatchEvent(new Event('statechange'));await result;assert.equal(worker.state,'activated');});
+test('already active and failed updates terminate correctly',async()=>{await upgrade({register:async()=>({active:new Worker('activated'),update:async()=>{}})});await assert.rejects(upgrade({register:async()=>({installing:new Worker('redundant'),update:async()=>{}})}));});
