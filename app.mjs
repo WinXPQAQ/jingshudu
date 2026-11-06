@@ -1,8 +1,10 @@
-import {LEVELS,createGame,conflicts,finishedDigits,complete,edit,undo,influence,validateSave,choosePuzzle} from './core.mjs';
-const $=id=>document.getElementById(id),SAVE='jingsudoku-web-v1',PREF='jingsudoku-web-preferences';
+import {LEVELS,createGame,conflicts,finishedDigits,complete,edit,undo,influence,validateSave,choosePuzzle,puzzleId,validateSeen} from './core.mjs';
+const $=id=>document.getElementById(id),SAVE='jingsudoku-web-v1',PREF='jingsudoku-web-preferences',HISTORY='jingsudoku-web-seen-v1';
+let seen=new Set(),pendingSeen=null,historyBlocked=false;
 let game,corpus,selected=-1,noteMode=false,enhanced=false,pendingImport=null,saveFailed=false;
 const cells=[],keys=[];
 function notice(s){$('notice').textContent=s;}
+function rememberGame(){if(!game)return;seen.add(puzzleId(game.givens.join('')));if(historyBlocked)return;try{localStorage.setItem(HISTORY,JSON.stringify([...seen]));}catch{notice('已玩题目记录无法保存，关闭后可能重复，请导出备份。');}}
 function persist(){try{localStorage.setItem(SAVE,JSON.stringify(game));saveFailed=false;$('save-status').textContent='进度已保存在这台设备';}catch{saveFailed=true;$('save-status').textContent='无法自动保存，请导出备份';notice('浏览器无法保存进度，请在「存档与备份」中导出。');}}
 function render(){
  if(!game)return;
@@ -36,17 +38,17 @@ for(let i=0;i<81;i++){
  cell.addEventListener('click',()=>{selected=i;if(!saveFailed)notice('');render();});$('board').append(cell);cells.push(cell);
 }
 for(let n=1;n<=9;n++){const key=document.createElement('button');key.className='number-key';key.textContent=n;key.setAttribute('aria-label',`输入 ${n}`);key.onclick=()=>enter(n);$('keypad').append(key);keys.push(key);}
-LEVELS.forEach((label,d)=>{const b=document.createElement('button');b.className='difficulty-option';b.dataset.level=d;const text=document.createElement('span');text.textContent=label;const dots=document.createElement('small');dots.textContent='●'.repeat(d+1)+'○'.repeat(4-d);dots.setAttribute('aria-hidden','true');b.append(text,dots);b.onclick=()=>{if(!corpus){notice('题库尚未加载，请联网后重试。');return;}game=createGame(choosePuzzle(corpus,d,game?.givens.join('')),d);selected=-1;noteMode=false;notice('');persist();render();$('difficulty-dialog').close();};$('difficulty-options').append(b);});
+LEVELS.forEach((label,d)=>{const b=document.createElement('button');b.className='difficulty-option';b.dataset.level=d;const text=document.createElement('span');text.textContent=label;const dots=document.createElement('small');dots.textContent='●'.repeat(d+1)+'○'.repeat(4-d);dots.setAttribute('aria-hidden','true');b.append(text,dots);b.onclick=()=>{try{for(const id of validateSeen(JSON.parse(localStorage.getItem(HISTORY)||'[]')))seen.add(id);}catch{historyBlocked=true;}if(!corpus){notice('题库尚未加载，请联网后重试。');return;}if(historyBlocked){notice('已玩记录无法读取，请先导出备份或恢复有效记录，避免重复选题。');return;}const next=choosePuzzle(corpus,d,game?.givens.join(''),seen);if(!next){$('difficulty-dialog').close();notice('这个难度的题已全部玩过，试试其他难度吧。');return;}game=createGame(next,d);selected=-1;noteMode=false;notice('');persist();rememberGame();render();$('difficulty-dialog').close();};$('difficulty-options').append(b);});
 $('new-game').onclick=()=>open('difficulty-dialog');$('undo').onclick=undoMove;$('erase').onclick=()=>enter(0);
 $('notes').onclick=()=>{noteMode=!noteMode;render();};
 $('enhance').onclick=()=>{enhanced=!enhanced;try{localStorage.setItem(PREF,JSON.stringify({enhanced}));}catch{notice('此浏览器无法记住辅助增强设置。');}render();};
 $('help').onclick=$('install-info').onclick=()=>open('help-dialog');
-$('backup').onclick=()=>{pendingImport=null;$('import').value='';$('import-status').textContent='';$('confirm-import').hidden=true;open('backup-dialog');};
+$('backup').onclick=()=>{pendingImport=null;pendingSeen=null;$('import').value='';$('import-status').textContent='';$('confirm-import').hidden=true;open('backup-dialog');};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
-$('export').onclick=()=>{if(!game)return;const blob=new Blob([JSON.stringify(game,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`静数独-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);$('import-status').textContent='已准备下载，请将文件保存到“文件”或下载目录。';};
-$('import').onchange=async()=>{pendingImport=null;$('confirm-import').hidden=true;const f=$('import').files[0];if(!f)return;try{if(f.size>1500000)throw Error('文件过大');pendingImport=validateSave(JSON.parse(await f.text()));$('import-status').textContent=`已读取：${LEVELS[pendingImport.level]}，填写 ${pendingImport.values.filter(Boolean).length}/81 格。确认后替换当前进度。`;$('confirm-import').hidden=false;}catch{$('import-status').textContent='无法读取该存档。请选择本网页版导出的有效 JSON 文件，当前进度未改变。';}};
-$('confirm-import').onclick=()=>{if(!pendingImport)return;game=pendingImport;pendingImport=null;selected=-1;noteMode=false;notice('存档已导入。');persist();render();$('backup-dialog').close();};
+$('export').onclick=()=>{if(!game)return;const blob=new Blob([JSON.stringify({...game,seen:[...seen]},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`静数独-${new Date().toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);$('import-status').textContent='已准备下载，请将文件保存到“文件”或下载目录。';};
+$('import').onchange=async()=>{pendingImport=null;pendingSeen=null;$('confirm-import').hidden=true;const f=$('import').files[0];if(!f)return;try{if(f.size>4000000)throw Error('文件过大');const imported=JSON.parse(await f.text());pendingImport=validateSave(imported);pendingSeen=validateSeen(imported.seen??[]);$('import-status').textContent=`已读取：${LEVELS[pendingImport.level]}，填写 ${pendingImport.values.filter(Boolean).length}/81 格。确认后替换当前进度。`;$('confirm-import').hidden=false;}catch{$('import-status').textContent='无法读取该存档。请选择本网页版导出的有效 JSON 文件，当前进度未改变。';}};
+$('confirm-import').onclick=()=>{if(!pendingImport)return;game=pendingImport;for(const id of pendingSeen??[])seen.add(id);historyBlocked=false;pendingImport=null;pendingSeen=null;selected=-1;noteMode=false;notice('存档已导入。');$('new-game').disabled=!corpus;persist();rememberGame();render();$('backup-dialog').close();};
 document.addEventListener('keydown',e=>{
  if(document.querySelector('dialog[open]')||!game||e.altKey)return;
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undoMove();return;}
@@ -59,12 +61,13 @@ document.addEventListener('keydown',e=>{
   selected=e.key==='ArrowLeft'?r*9+Math.max(0,c-1):e.key==='ArrowRight'?r*9+Math.min(8,c+1):e.key==='ArrowUp'?Math.max(0,r-1)*9+c:Math.min(8,r+1)*9+c;render();cells[selected].focus();
  }
 });
-window.addEventListener('storage',e=>{if(e.key===SAVE&&e.newValue){try{game=validateSave(JSON.parse(e.newValue));selected=-1;render();notice('已同步此浏览器另一个标签页的进度。');}catch{}}});
+window.addEventListener('storage',e=>{if(e.key===HISTORY&&e.newValue){try{for(const id of validateSeen(JSON.parse(e.newValue)))seen.add(id);}catch{}return;}if(e.key===SAVE&&e.newValue){try{game=validateSave(JSON.parse(e.newValue));selected=-1;rememberGame();render();notice('已同步此浏览器另一个标签页的进度。');}catch{}}});
 async function init(){
  $('new-game').disabled=true;
+ try{seen=validateSeen(JSON.parse(localStorage.getItem(HISTORY)||'[]'));}catch{historyBlocked=true;notice('已玩记录无法读取，已暂停选新题以避免重复；当前局仍可继续。');}
  try{enhanced=JSON.parse(localStorage.getItem(PREF)||'{}').enhanced===true;const raw=localStorage.getItem(SAVE);if(raw)game=validateSave(JSON.parse(raw));}catch{notice('旧存档无法读取或存储不可用，可以重新开局或导入备份。');}
- if(game)render();
- try{const response=await fetch('./puzzles.json');if(!response.ok)throw Error('题库加载失败');corpus=await response.json();if(!Array.isArray(corpus)||corpus.length!==5||!corpus.every(a=>Array.isArray(a)&&a.length&&a.every(p=>/^[0-9]{81}$/.test(p))))throw Error('题库格式错误');if(!game){game=createGame(choosePuzzle(corpus,0),0);persist();}$('new-game').disabled=false;render();}
+ if(game){rememberGame();render();}
+ try{const response=await fetch('./puzzles.json');if(!response.ok)throw Error('题库加载失败');corpus=await response.json();if(!Array.isArray(corpus)||corpus.length!==5||!corpus.every(a=>Array.isArray(a)&&a.length&&a.every(p=>/^[0-9]{81}$/.test(p))))throw Error('题库格式错误');if(!game){const next=choosePuzzle(corpus,0,null,seen);if(!next||historyBlocked)throw Error('无法选新题');game=createGame(next,0);rememberGame();persist();}$('new-game').disabled=historyBlocked;render();}
  catch{notice('题库未能加载。请联网后刷新；已有存档仍可继续。');if(!game){$('board').setAttribute('aria-label','题库加载失败');$('undo').disabled=$('erase').disabled=$('notes').disabled=true;keys.forEach(k=>k.disabled=true);}}
  $('export').disabled=!game;
  if('serviceWorker' in navigator){

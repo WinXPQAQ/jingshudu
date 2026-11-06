@@ -24,4 +24,10 @@ export function validateSave(data){
  if(!validState(data)||!Array.isArray(data.history)||data.history.length>300||!data.history.every(validState))throw Error('游戏进度数据不正确');
  return {version:1,level:data.level,givens:[...data.givens],values:[...data.values],notes:[...data.notes],history:data.history.map(s=>({values:[...s.values],notes:[...s.notes]}))};
 }
-export function choosePuzzle(corpus,level,current){const pool=corpus[level].filter(p=>p!==current);return pool[Math.floor(Math.random()*pool.length)]||corpus[level][0];}
+// Stable 64-bit identifier, with collisions checked for every bundled puzzle.
+export function puzzleId(puzzle){let a=2166136261,b=2246822507;for(let i=0;i<puzzle.length;i++){const c=puzzle.charCodeAt(i);a=Math.imul(a^c,16777619);b=Math.imul(b^c,3266489909);}return (a>>>0).toString(16).padStart(8,'0')+(b>>>0).toString(16).padStart(8,'0');}
+export function validateSeen(ids){if(!Array.isArray(ids)||ids.length>100000||!ids.every(id=>typeof id==='string'&&/^[0-9a-f]{16}$/.test(id)))throw Error('已玩题目记录格式不正确');return new Set(ids);}
+export function choosePuzzle(corpus,level,current,seen=new Set()){
+ const pool=corpus[level].filter(p=>p!==current&&!seen.has(puzzleId(p)));
+ return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+}

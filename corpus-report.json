@@ -1,0 +1,33 @@
+{
+  "counts": [
+    10000,
+    10000,
+    10000,
+    10000,
+    10000
+  ],
+  "symmetryDuplicatesSkipped": 2766,
+  "sha256": "1afc703953a97a8798e4252cc3654b62b8b7c79d3ad29d4fd660149dc650139d",
+  "version": "0.2.0",
+  "generatorSeeds": [
+    20262000,
+    20262001,
+    20262002,
+    20262003
+  ],
+  "countsByLogicTier": {
+    "0": 10000,
+    "1": 10000,
+    "2": 3194,
+    "3": 13113,
+    "4": 13693
+  },
+  "countsByBinaryFloor": {
+    "0": 18690,
+    "1": 11305,
+    "2": 20005
+  },
+  "highTierSingleBranchShortcuts": 0,
+  "logicTier3Or4DemotedToExpertOrBelow": 6806,
+  "generatorSourceSha256": "2fd7944e17b68cc14ce32913e1ccf08553fdafa813518c87803bea995bbce70f"
+}

@@ -1,0 +1,31 @@
+{
+  "totalChecked": 50000,
+  "highTierChecked": 20000,
+  "shards": [
+    {
+      "shard": 0,
+      "checked": 12500,
+      "high": 5000,
+      "status": "passed"
+    },
+    {
+      "shard": 1,
+      "checked": 12500,
+      "high": 5000,
+      "status": "passed"
+    },
+    {
+      "shard": 2,
+      "checked": 12500,
+      "high": 5000,
+      "status": "passed"
+    },
+    {
+      "shard": 3,
+      "checked": 12500,
+      "high": 5000,
+      "status": "passed"
+    }
+  ],
+  "status": "passed"
+}
